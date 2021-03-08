@@ -10,6 +10,7 @@ import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
+import org.jsoup.nodes.Element
 
 
 class GradesActivity : AppCompatActivity()  {
@@ -20,10 +21,22 @@ class GradesActivity : AppCompatActivity()  {
         val layout = findViewById<LinearLayout>(R.id.linear_layout)
         val extras = intent.extras
         var grades : ArrayList<Pair<String,String>> = ArrayList(0)
+        var table : ArrayList<Array<String>> = ArrayList(0)
         if (extras!=null){
-            grades = extras.getSerializable("data") as ArrayList<Pair<String,String>>
+            table = extras.getSerializable("data") as ArrayList<Array<String>>
         }
 
+        for (t in table) {
+                // t.format[Semester,fach,note]
+                    print(t[0].toString())
+            print(t[1].toString())
+            print(t[2].toString())
+                    var note = t[0]
+                    if (note == "")
+                        note = "--"
+                    grades.add(Pair(t[1], note))
+
+            }
 
 
 

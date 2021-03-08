@@ -14,6 +14,7 @@ import androidx.security.crypto.MasterKeys
 import org.jsoup.Connection
 import org.jsoup.Jsoup
 import kotlinx.coroutines.*
+import org.jsoup.nodes.Element
 
 
 class MainActivity : AppCompatActivity() {
@@ -29,20 +30,18 @@ class MainActivity : AppCompatActivity() {
 
 
 
-            if (resultCode == Activity.RESULT_OK) {
-                val sharedPreferences = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-                val editor = sharedPreferences.edit()
-                if (data != null) {
-                    editor.putString("username",data.getStringExtra("mail") as String)
-                    editor.putString("pwd",data.getStringExtra("pwd") as String)
-                    editor.apply()
-                    var username = sharedPreferences.getString("username","") as String
-                    var pwd = sharedPreferences.getString("pwd","") as String
+        if (resultCode == Activity.RESULT_OK) {
+            val sharedPreferences = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+            val editor = sharedPreferences.edit()
+            if (data != null) {
+                editor.putString("username", data.getStringExtra("mail") as String)
+                editor.putString("pwd", data.getStringExtra("pwd") as String)
+                editor.apply()
+                var username = sharedPreferences.getString("username", "") as String
+                var pwd = sharedPreferences.getString("pwd", "") as String
 
-                    startCrawling(username,pwd)
-                }
-
-
+                startCrawling(username, pwd)
+            }
 
 
         }
@@ -56,25 +55,23 @@ class MainActivity : AppCompatActivity() {
         val sharedPreferences = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
         val editor = sharedPreferences.edit()
 
-        var username = sharedPreferences.getString("username","") as String
-        var pwd = sharedPreferences.getString("pwd","") as String
+        var username = sharedPreferences.getString("username", "") as String
+        var pwd = sharedPreferences.getString("pwd", "") as String
 
 
-            if (username == "" && pwd == "") {
-                val i = Intent(this, LoginActivity::class.java);
-                startActivityForResult(i, LOGIN_ACTIVITY);
+        if (username == "" && pwd == "") {
+            val i = Intent(this, LoginActivity::class.java);
+            startActivityForResult(i, LOGIN_ACTIVITY);
 
+        } else {
+
+            startCrawling(username, pwd)
         }
-        else{
-
-                startCrawling(username,pwd)
-            }
-
 
 
     }
 
-    fun startCrawling(username :String, pwd : String) {
+    fun startCrawling(username: String, pwd: String) {
         val job = GlobalScope.launch(Background) {
             val grades = getGrades(username, pwd)
             val mainIntent = Intent(applicationContext, GradesActivity::class.java)
@@ -88,10 +85,10 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    fun getGrades(username :String, pwd : String): ArrayList<Pair<String, String>> {
-        var toRet = ArrayList<Pair<String, String>>()
+    fun getGrades(username: String, pwd: String): ArrayList<Array<String>> {
+        var toRet = ArrayList<Array<String>>()
 
-        if(username == "" || pwd == ""){
+        if (username == "" || pwd == "") {
             println("No username or password")
             return toRet
         }
@@ -166,19 +163,29 @@ class MainActivity : AppCompatActivity() {
 
         val targetDoc = targetResponse.parse()
 
-        val table = targetDoc.select("tbody").select("tr")
+        var table = targetDoc.select("tbody").select("tr")
+        var count = 0
+
         for (t in table) {
             if (t.children().size > 4) {
 
-                if (t.children()[4].toString().contains("WS 20/21"))
-                    if (t.children()[3].toString().contains("MO")) {
-                        var note = t.children()[5].html()
-                        if (note == "")
-                            note = "--"
-                        toRet.add(Pair(t.children()[1].html(), note))
-                    }
+
+                if (t.children()[3].toString().contains("MO")) {
+
+                    var fach = t.children()[1].html()
+                    var note = t.children()[5].html()
+
+                    var semester = t.children()[4].html()
+                    var tmpArr = Array<String>(3) { semester;fach;note }
+                    if (note == "")
+                        note = "--"
+                    toRet.add(tmpArr)
+                    count++
+                }
             }
+
         }
+
         println("loading data finished")
 
 
@@ -187,6 +194,7 @@ class MainActivity : AppCompatActivity() {
 
 
     }
+
 }
 
 
