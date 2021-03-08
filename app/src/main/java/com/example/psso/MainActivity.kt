@@ -66,6 +66,7 @@ class MainActivity : AppCompatActivity() {
 
         }
         else{
+
                 startCrawling(username,pwd)
             }
 
