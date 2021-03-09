@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
+
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/loginLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-
+    android:background="@color/colorPrimary"
     android:layout_gravity="center|center_vertical"
-    android:layout_margin="@dimen/activity_horizontal_margin"
+
     android:orientation="vertical"
     tools:context=".LoginActivity">
 
@@ -16,30 +17,41 @@
         android:id="@+id/textView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:layout_margin="@dimen/activity_horizontal_margin"
         android:layout_marginVertical="@dimen/activity_vertical_margin"
+        android:textSize="24dp"
+        android:textColor="@color/white"
+        android:fontFamily="monospace"
         android:gravity="center_horizontal"
-        android:text="PSSO Login"
-        />
+        android:text="PSSO Login" />
 
 
     <EditText
         android:id="@+id/loginMail"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginVertical="@dimen/activity_vertical_margin"
-        android:ems="10"
-        android:hint="email"
-        android:inputType="textEmailAddress"
         android:layout_below="@+id/textView"
-        />
+        android:layout_margin="@dimen/activity_horizontal_margin"
+        android:layout_marginVertical="@dimen/activity_vertical_margin"
+        android:textColorHint="@color/white"
+        android:textColor="@color/white"
+        android:fontFamily="monospace"
+
+        android:ems="10"
+        android:hint="username"
+        android:inputType="textEmailAddress" />
 
     <EditText
         android:id="@+id/loginPassword"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginVertical="@dimen/activity_vertical_margin"
+        android:layout_margin="@dimen/activity_horizontal_margin"
         android:ems="10"
+        android:fontFamily="monospace"
         android:hint="password"
+        android:textColorHint="@color/white"
+        android:textColor="@color/white"
         android:inputType="textPassword"
         android:layout_below="@+id/loginMail"
         />
@@ -48,9 +60,10 @@
         android:id="@+id/loginButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_centerHorizontal="true"
-        android:text="Button"
         android:layout_below="@+id/loginPassword"
-        />
+        android:layout_marginTop="@dimen/activity_vertical_margin"
+        android:layout_centerHorizontal="true"
+        android:backgroundTint="@color/colorPrimaryDark"
+        android:text="Log In" />
 
 </RelativeLayout>

@@ -176,7 +176,7 @@ class MainActivity : AppCompatActivity() {
                     var note = t.children()[5].html()
 
                     var semester = t.children()[4].html()
-                    var tmpArr = Array<String>(3) { semester;fach;note }
+                    var tmpArr =arrayOf(semester,fach,note)
                     if (note == "")
                         note = "--"
                     toRet.add(tmpArr)
