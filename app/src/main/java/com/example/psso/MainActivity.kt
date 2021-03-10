@@ -1,27 +1,26 @@
 package com.example.psso
 
 import android.app.Activity
-import android.content.Context
-
+import android.app.AlertDialog
 import android.content.Intent
-import android.content.SharedPreferences
 import android.os.Bundle
-
 import androidx.appcompat.app.AppCompatActivity
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKeys
-
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.newFixedThreadPoolContext
 import org.jsoup.Connection
 import org.jsoup.Jsoup
-import kotlinx.coroutines.*
-import org.jsoup.nodes.Element
+import kotlin.math.log
 
 
 class MainActivity : AppCompatActivity() {
 
     val LOGIN_ACTIVITY = 0
     val PREF_NAME = "myPrefs"
-
+    var username = ""
+    var pwd = ""
     internal val Background = newFixedThreadPoolContext(2, "bg")
 
 
@@ -31,17 +30,21 @@ class MainActivity : AppCompatActivity() {
 
 
         if (resultCode == Activity.RESULT_OK) {
-            val sharedPreferences = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-            val editor = sharedPreferences.edit()
-            if (data != null) {
-                editor.putString("username", data.getStringExtra("mail") as String)
-                editor.putString("pwd", data.getStringExtra("pwd") as String)
-                editor.apply()
-                var username = sharedPreferences.getString("username", "") as String
-                var pwd = sharedPreferences.getString("pwd", "") as String
+            val masterKeyAlias = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
 
-                startCrawling(username, pwd)
-            }
+            val masterKey = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
+            val sharedPreferences = EncryptedSharedPreferences.create(
+                PREF_NAME,
+                masterKey,
+                applicationContext,
+                EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+                EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+            )
+
+            username = sharedPreferences.getString("username", "") as String
+            pwd = sharedPreferences.getString("pwd", "") as String
+
+            startCrawling(username, pwd)
 
 
         }
@@ -52,16 +55,22 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
         supportActionBar?.hide()
 
-        val sharedPreferences = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
-        val editor = sharedPreferences.edit()
+        val masterKey = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
+        val sharedPreferences = EncryptedSharedPreferences.create(
+            PREF_NAME,
+            masterKey,
+            applicationContext,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
 
-        var username = sharedPreferences.getString("username", "") as String
-        var pwd = sharedPreferences.getString("pwd", "") as String
+        username = sharedPreferences.getString("username", "") as String
+        pwd = sharedPreferences.getString("pwd", "") as String
 
 
         if (username == "" && pwd == "") {
-            val i = Intent(this, LoginActivity::class.java);
-            startActivityForResult(i, LOGIN_ACTIVITY);
+            val i = Intent(this, LoginActivity::class.java)
+            startActivityForResult(i, LOGIN_ACTIVITY)
 
         } else {
 
@@ -71,13 +80,23 @@ class MainActivity : AppCompatActivity() {
 
     }
 
-    fun startCrawling(username: String, pwd: String) {
-        val job = GlobalScope.launch(Background) {
+    private fun startCrawling(username: String, pwd: String) {
+        GlobalScope.launch(Background) {
             val grades = getGrades(username, pwd)
-            val mainIntent = Intent(applicationContext, GradesActivity::class.java)
-            mainIntent.putExtra("data", grades)
-            startActivity(mainIntent)
-            finish()
+
+            if(grades.size == 0){
+
+                val i = Intent(this@MainActivity, LoginActivity::class.java)
+                startActivityForResult(i, LOGIN_ACTIVITY)
+            }
+            else{
+                val mainIntent = Intent(applicationContext, GradesActivity::class.java)
+                mainIntent.putExtra("data", grades)
+                startActivity(mainIntent)
+                finish()
+            }
+
+
 
 
         }
@@ -85,8 +104,8 @@ class MainActivity : AppCompatActivity() {
     }
 
 
-    fun getGrades(username: String, pwd: String): ArrayList<Array<String>> {
-        var toRet = ArrayList<Array<String>>()
+    private fun getGrades(username: String, pwd: String): ArrayList<Array<String>> {
+        val toRet = ArrayList<Array<String>>()
 
         if (username == "" || pwd == "") {
             println("No username or password")
@@ -95,9 +114,8 @@ class MainActivity : AppCompatActivity() {
         val url =
             "https://psso.th-koeln.de/qisserver/rds?state=user&type=1&category=auth.login&startpage=portal.vm&breadCrumbSource=portal"
         println("Loading website")
-        var response: Connection.Response =
+        val response: Connection.Response =
             Jsoup.connect(url)
-
                 .method(Connection.Method.POST)
                 .data("asdf", username)
                 .data("fdsa", pwd)
@@ -105,13 +123,16 @@ class MainActivity : AppCompatActivity() {
                 .ignoreContentType(true)
                 .userAgent("Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:25.0) Gecko/20100101 Firefox/25.0")
                 .execute()
-        println("website loaded")
+
         val doc = response.parse()
         var sessionId = ""
         if (response.hasCookie("JSESSIONID")) {
             sessionId = response.cookie("JSESSIONID")
         }
+        var logInStatus = doc.body().select("div.divloginstatus").first().children()
 
+        if(logInStatus.size <2)
+            return toRet
 
         var urls = doc.body().select("a[href]")
         var urlToNextPage = ""
@@ -163,7 +184,7 @@ class MainActivity : AppCompatActivity() {
 
         val targetDoc = targetResponse.parse()
 
-        var table = targetDoc.select("tbody").select("tr")
+        val table = targetDoc.select("tbody").select("tr")
         var count = 0
 
         for (t in table) {
@@ -172,11 +193,11 @@ class MainActivity : AppCompatActivity() {
 
                 if (t.children()[3].toString().contains("MO")) {
 
-                    var fach = t.children()[1].html()
+                    val fach = t.children()[1].html()
                     var note = t.children()[5].html()
-
-                    var semester = t.children()[4].html()
-                    var tmpArr =arrayOf(semester,fach,note)
+                    var sortHelper = ""
+                    val semester = t.children()[4].html()
+                    val tmpArr = arrayOf(semester, fach, note, sortHelper)
                     if (note == "")
                         note = "--"
                     toRet.add(tmpArr)

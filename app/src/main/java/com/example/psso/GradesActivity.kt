@@ -1,9 +1,7 @@
 package com.example.psso
 
-//import android.R
-import android.app.Activity
+
 import android.app.AlertDialog
-import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.Typeface
@@ -15,59 +13,63 @@ import android.widget.Button
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.DividerItemDecoration
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import androidx.security.crypto.EncryptedSharedPreferences
+import androidx.security.crypto.MasterKeys
 
 
 class GradesActivity : AppCompatActivity() {
 
 
-    lateinit var layout: LinearLayout
-    var listOfSemesters = arrayListOf<String>("Alle Semester")
+    lateinit var scrollContainer: LinearLayout
+    var listOfSemesters = arrayListOf("Alle Semester")
     val PREF_NAME = "myPrefs"
-
-
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_grades)
-        val sharedPreferences = getSharedPreferences(PREF_NAME, Context.MODE_PRIVATE)
+        val masterKey = MasterKeys.getOrCreate(MasterKeys.AES256_GCM_SPEC)
+        val sharedPreferences = EncryptedSharedPreferences.create(
+            PREF_NAME,
+            masterKey,
+            applicationContext,
+            EncryptedSharedPreferences.PrefKeyEncryptionScheme.AES256_SIV,
+            EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
+        )
         val editor = sharedPreferences.edit()
 
 
-        if(!sharedPreferences.contains("SEMESTER_SELECT")) {
+        if (!sharedPreferences.contains("SEMESTER_SELECT")) {
             editor.putInt("SEMESTER_SELECT", 0)
-            editor.putString("LAST_SEMESTER","Alle Semester")
+            editor.putString("LAST_SEMESTER", "Alle Semester")
             editor.apply()
         }
 
 
 
         supportActionBar?.hide()
-        layout = findViewById<LinearLayout>(R.id.scrollContainer)
+        scrollContainer = findViewById(R.id.scrollContainer)
 
-        generateView(sharedPreferences.getString("LAST_SEMESTER","Alle Semester") as String)
+        generateView(sharedPreferences.getString("LAST_SEMESTER", "Alle Semester") as String)
 
 
         val semesterButton = findViewById<Button>(R.id.semesterButton)
-        var clickedItem = sharedPreferences.getInt("SEMESTER_SELECT",0)
+        var clickedItem = sharedPreferences.getInt("SEMESTER_SELECT", 0)
         semesterButton.setOnClickListener(
             object : View.OnClickListener {
                 override fun onClick(v: View?) {
 
-                    var los = listOfSemesters.toTypedArray()
-                    val builder = AlertDialog.Builder(this@GradesActivity,R.style.DarkDialogTheme)
+                    val los = listOfSemesters.toTypedArray()
+                    AlertDialog.Builder(this@GradesActivity, R.style.DarkDialogTheme)
 
                         .setTitle("Semester auswählen")
                         .setNeutralButton("cancel") { dialog, which ->
                             // Respond to neutral button press
                         }
                         .setPositiveButton("ok") { dialog, which ->
-                            editor.putInt("SEMESTER_SELECT",clickedItem)
-                            editor.putString("LAST_SEMESTER",los[clickedItem])
+                            editor.putInt("SEMESTER_SELECT", clickedItem)
+                            editor.putString("LAST_SEMESTER", los[clickedItem])
                             editor.apply()
-                            println(sharedPreferences.getInt("SEMESTER_SELECT",0))
+                            println(sharedPreferences.getInt("SEMESTER_SELECT", 0))
                             generateView(los[clickedItem])
                         }
                         // Single-choice items (initialized with checked item)
@@ -84,21 +86,42 @@ class GradesActivity : AppCompatActivity() {
         refreshButton.setOnClickListener(
             object : View.OnClickListener {
                 override fun onClick(v: View?) {
-                    val activity2Intent = Intent(applicationContext, MainActivity::class.java)
-                    startActivity(activity2Intent)
-                    finish()
+
+
+                    AlertDialog.Builder(this@GradesActivity, R.style.DarkDialogTheme)
+
+
+                        .setNegativeButton("Notenliste aktualisieren") {dialog , which ->
+                            val activity2Intent = Intent(applicationContext, MainActivity::class.java)
+                            startActivity(activity2Intent)
+                            finish()
+                        }
+                        .setPositiveButton("App zurücksetzen") { dialog, which ->
+                            editor.clear()
+                            editor.apply()
+                            val activity2Intent =
+                                Intent(applicationContext, MainActivity::class.java)
+                            startActivity(activity2Intent)
+                            finish()
+                        }
+
+                        .show()
+
+
+
+
                 }
             })
 
     }
 
 
-    fun generateView(a: String = "Alle Semester") {
+    fun generateView(sortBy: String = "Alle Semester") {
         val extras = intent.extras
-        var sortBy = a
 
-        if (layout.childCount > 0)
-            layout.removeAllViewsInLayout()
+
+        if (scrollContainer.childCount > 0)
+            scrollContainer.removeAllViewsInLayout()
 
 
         val label = findViewById<TextView>(R.id.labelView)
@@ -110,7 +133,9 @@ class GradesActivity : AppCompatActivity() {
             table = extras.getSerializable("data") as ArrayList<Array<String>>
         }
 
+
         for (t in table) {
+
 
             if (!listOfSemesters.contains(t[0]))
                 listOfSemesters.add(t[0])
@@ -118,8 +143,8 @@ class GradesActivity : AppCompatActivity() {
 
             // t.format[Semester,fach,note]
             if (sortBy != "" && t[0] == sortBy) {
-                var semester = t[0]
-                var fach = t[1]
+
+                val fach = t[1]
                 var note = t[2]
                 if (note == "")
                     note = "--"
@@ -128,65 +153,72 @@ class GradesActivity : AppCompatActivity() {
                 val fachView = TextView(this)
 
 
-                var fachText = fach
-                var notenText = note + "\n\n"
+                val fachText = fach
+                val notenText = note + "\n\n"
 
                 fachView.text = fachText
                 fachView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15F)
-                fachView.setGravity(Gravity.CENTER)
+                fachView.gravity = Gravity.CENTER
                 fachView.setTextColor(Color.WHITE)
-                fachView.setTypeface(Typeface.MONOSPACE)
+                fachView.typeface = Typeface.MONOSPACE
 
                 notenView.text = notenText
-                notenView.setGravity(Gravity.CENTER)
+                notenView.gravity = Gravity.CENTER
                 notenView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15F)
                 notenView.setTextColor(Color.WHITE)
-                notenView.setTypeface(Typeface.MONOSPACE)
+                notenView.typeface = Typeface.MONOSPACE
 
-                layout.addView(fachView)
-                layout.addView(notenView)
+                scrollContainer.addView(fachView)
+                scrollContainer.addView(notenView)
 
 
             }
             if (sortBy == "Alle Semester") {
 
-                var semester = t[0]
-                var fach = t[1]
+                val semester = t[0]
+                val fach = t[1]
                 var note = t[2]
+                if (note == "")
+                    note = "--"
+
 
                 val notenView = TextView(this)
                 val fachView = TextView(this)
                 val semesterView = TextView(this)
 
-                var fachText = fach + "\n"
-                var semesterText = semester + "\n"
-                var notenText = note + "\n\n"
+                val fachText = fach
+                val semesterText = semester
+                val notenText = note + "\n\n"
+
+
                 fachView.text = fachText
                 notenView.text = notenText
                 semesterView.text = semesterText
 
                 fachView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15F)
-                fachView.setGravity(Gravity.CENTER)
+                fachView.gravity = Gravity.CENTER
                 fachView.setTextColor(Color.WHITE)
-                fachView.setTypeface(Typeface.MONOSPACE)
+                fachView.typeface = Typeface.MONOSPACE
 
                 semesterView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15F)
-                semesterView.setGravity(Gravity.CENTER)
+                semesterView.gravity = Gravity.CENTER
                 semesterView.setTextColor(Color.WHITE)
-                semesterView.setTypeface(Typeface.MONOSPACE)
+                semesterView.typeface = Typeface.MONOSPACE
 
-                notenView.setGravity(Gravity.CENTER)
+                notenView.gravity = Gravity.CENTER
                 notenView.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15F)
                 notenView.setTextColor(Color.WHITE)
-                notenView.setTypeface(Typeface.MONOSPACE)
+                notenView.typeface = Typeface.MONOSPACE
 
-                layout.addView(fachView)
-                layout.addView(semesterView)
-                layout.addView(notenView)
+                scrollContainer.addView(fachView)
+                scrollContainer.addView(semesterView)
+                scrollContainer.addView(notenView)
+
+
             }
 
-        }
 
+        }
 
 
     }

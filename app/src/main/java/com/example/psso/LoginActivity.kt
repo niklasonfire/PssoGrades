@@ -29,9 +29,7 @@ class LoginActivity : AppCompatActivity() {
             EncryptedSharedPreferences.PrefValueEncryptionScheme.AES256_GCM
         )
         val editor = sharedPreferences.edit()
-        editor.putString("username", "")
-        editor.putString("pwd", "")
-        editor.apply()
+
         val button = findViewById<Button>(R.id.loginButton)
         val mailView = findViewById<EditText>(R.id.loginMail)
         val pwdView = findViewById<EditText>(R.id.loginPassword)
@@ -42,8 +40,9 @@ class LoginActivity : AppCompatActivity() {
                 userPwd = pwdView.text.toString()
                 if(userMail != "" && userPwd != "") {
                     val resultIntent = Intent()
-                    resultIntent.putExtra("mail", userMail)
-                    resultIntent.putExtra("pwd",userPwd)
+                    editor.putString("username", userMail)
+                    editor.putString("pwd", userPwd)
+                    editor.apply()
                     setResult(Activity.RESULT_OK, resultIntent)
                     finish()
                 }

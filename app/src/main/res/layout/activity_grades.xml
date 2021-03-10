@@ -1,69 +1,75 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/linear_layout"
+    android:id="@+id/relative_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:layout_gravity="center|center_vertical"
     android:background="@color/colorPrimary"
-
-    android:gravity="center_horizontal|center_vertical"
     android:orientation="vertical"
     tools:context=".GradesActivity">
 
 
-
     <TextView
         android:id="@+id/labelView"
-        android:layout_width="wrap_content"
-        android:layout_height="0dp"
-        android:layout_margin="@dimen/activity_vertical_margin"
-        android:layout_weight="0.6"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_marginVertical="@dimen/activity_vertical_margin"
         android:fontFamily="monospace"
+        android:gravity="center"
+        android:text="WS 20/21"
         android:textColor="@color/white"
-        android:text="WS 20/21" />
+
+        />
 
     <View
         android:id="@+id/divider2"
         android:layout_width="match_parent"
         android:layout_height="1dp"
+        android:layout_below="@id/labelView"
         android:background="?android:attr/listDivider"
         android:fadingEdge="horizontal" />
 
     <ScrollView
         android:id="@+id/scrollView"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_gravity="center|center_horizontal"
-        android:layout_margin="@dimen/activity_vertical_margin"
-        android:layout_weight="15"
-        android:requiresFadingEdge="vertical"
-        android:background="@color/colorPrimary"
+        android:layout_height="match_parent"
+        android:layout_below="@id/divider2"
+
         >
 
         <LinearLayout
             android:id="@+id/scrollContainer"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:orientation="vertical">
+            android:orientation="vertical"
+            android:paddingVertical="50dp"
+            android:paddingHorizontal="@dimen/activity_horizontal_margin"
+            />
 
-        </LinearLayout>
     </ScrollView>
 
     <View
         android:id="@+id/divider3"
         android:layout_width="match_parent"
         android:layout_height="1dp"
+        android:layout_above="@id/buttonBar"
         android:background="?android:attr/listDivider"
         android:fadingEdge="horizontal" />
 
     <LinearLayout
+        android:id="@+id/buttonBar"
         android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_weight="1"
+        android:layout_height="wrap_content"
+
+        android:layout_alignParentBottom="true"
+
         android:gravity="center"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:background="@color/colorPrimary"
+        >
 
         <Button
             android:id="@+id/semesterButton"
@@ -71,10 +77,9 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="@dimen/activity_horizontal_margin"
             android:layout_marginRight="@dimen/activity_horizontal_margin"
-            android:text="semester"
-            android:visibility="visible"
             android:backgroundTint="@color/colorPrimaryDark"
-            />
+            android:text="semester"
+            android:visibility="visible" />
 
         <Button
             android:id="@+id/refreshButton"
@@ -82,12 +87,11 @@
             android:layout_height="wrap_content"
             android:layout_marginLeft="@dimen/activity_horizontal_margin"
             android:layout_marginRight="@dimen/activity_horizontal_margin"
+            android:backgroundTint="@color/colorPrimaryDark"
             android:gravity="center"
             android:text="Refresh"
-            android:visibility="visible"
-            android:backgroundTint="@color/colorPrimaryDark"
-            />
+            android:visibility="visible" />
     </LinearLayout>
 
 
-</LinearLayout>
+</RelativeLayout>
